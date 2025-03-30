@@ -12,7 +12,7 @@ import hashlib
 
 from connectors.obsidian import ObsidianConnector, ObsidianNote
 from processing.markdown_chunker import MarkdownChunker, TextChunk
-from models.robust_llm import RobustOllamaClient, RobustDigitalHumanitiesLLM
+from models.llm import RobustOllamaClient, RobustDigitalHumanitiesLLM
 from storage.vector_store import VectorStore
 from processing.debug_cache import DebugCache as ProcessingCache
 import config
