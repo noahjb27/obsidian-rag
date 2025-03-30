@@ -6,7 +6,8 @@ import time
 from pathlib import Path
 
 from connectors.obsidian import ObsidianConnector, ObsidianNote
-from processing.chunker import SemanticChunker, TextChunk
+from processing.markdown_chunker import MarkdownChunker as SemanticChunker
+from processing.chunker import TextChunk
 from models.llm import OllamaClient, DigitalHumanitiesLLM
 from storage.vector_store import VectorStore
 import config
@@ -111,7 +112,12 @@ class Pipeline:
         
         # Create embeddings for chunks (process in batches to avoid overwhelming the API)
         chunk_texts = [chunk.text for chunk in chunks]
-        embeddings = self.ollama.batch_get_embeddings(chunk_texts, batch_size=config.BATCH_SIZE)
+        try:
+            embeddings = self.ollama.batch_get_embeddings(chunk_texts, batch_size=config.BATCH_SIZE)
+        except Exception as e:
+            print(f"Error generating embeddings for note {note.title}: {str(e)}")
+            # Return empty list if embeddings fail
+            return []
         
         # Store chunks in vector database
         self.vector_store.add_chunks(chunks, embeddings)

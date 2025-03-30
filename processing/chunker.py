@@ -22,13 +22,14 @@ class TextChunk:
 
 
 class SemanticChunker:
-    """Chunks text based on semantic boundaries like sections and paragraphs."""
+    """Chunks text based on semantic boundaries like sections and paragraphs.
+    Better for long form writing."""
     
     def __init__(
         self, 
         target_chunk_size: int = 1500,
         chunk_overlap: int = 150,
-        min_chunk_size: int = 300,
+        min_chunk_size: int = 50,
         max_chunk_size: int = 2000
     ):
         """
@@ -114,14 +115,30 @@ class SemanticChunker:
         Returns:
             List of TextChunk objects
         """
+        # Skip empty documents
+        if not text or len(text.strip()) == 0:
+            print(f"Warning: Skipping empty document: {doc_metadata.get('doc_id', 'unknown')}")
+            return []
+            
         # First split by sections
         sections = self._split_into_sections(text)
         chunks = []
         chunk_id_counter = 0
         
         for section_idx, section in enumerate(sections):
+            # Skip empty sections
+            if not section or len(section.strip()) == 0:
+                continue
+                
             # For short sections, use them as is
             if self._estimate_tokens(section) <= self.max_chunk_size:
+                # Ensure section meets minimum size requirement
+                if self._estimate_tokens(section) < self.min_chunk_size and len(sections) > 1:
+                    # If this is a very small section and we have other sections,
+                    # consider appending it to previous or next section
+                    print(f"Warning: Section {section_idx} in {doc_metadata.get('doc_id', 'doc')} is below min size")
+                    # Still process it if it's the only section
+                
                 chunk_id = f"{doc_metadata.get('doc_id', 'doc')}_{chunk_id_counter}"
                 chunk_id_counter += 1
                 
